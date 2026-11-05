@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client; connect-src 'self' https://sheets.googleapis.com https://accounts.google.com; frame-src https://accounts.google.com; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://accounts.google.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#071425">
+<meta name="description" content="Finance HQ, a read-only connected Google Sheets finance dashboard with an offline demo.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Finance HQ · Personal Money Command Center</title>
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="styles.css">
+<script defer src="vault.js"></script>
+<script defer src="sheet-sync.js"></script>
+<script defer src="live-ui.js"></script>
+<script defer src="app.js"></script>
+</head>
+<body>
+<a href="#main" class="skip-link">Skip to content</a>
+<div class="app-shell">
+  <aside class="sidebar" aria-label="Main navigation">
+    <div class="brand"><span class="brand-symbol" aria-hidden="true"><svg viewBox="0 0 42 42"><path d="M6 30L16 20L23 25L35 10" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M28 10h7v7" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></svg></span><div><strong>FINANCE<span>HQ</span></strong><small>PERSONAL COMMAND CENTER</small></div></div>
+    <div class="sidebar-section-label">WORKSPACE</div>
+    <nav class="primary-nav" id="sidebarNav">
+      <button data-nav="home" class="nav-item selected"><span data-icon="home"></span> Overview</button>
+      <button data-nav="activity" class="nav-item"><span data-icon="list"></span> Transactions</button>
+      <button data-nav="budget" class="nav-item"><span data-icon="chart"></span> Budget & Savings</button>
+      <button data-nav="cards" class="nav-item"><span data-icon="card"></span> Credit Cards</button>
+      <button data-nav="bills" class="nav-item"><span data-icon="calendar"></span> Bills & Installments</button>
+      <button data-nav="shared" class="nav-item"><span data-icon="users"></span> Shared Expenses</button>
+      <button data-nav="rebates" class="nav-item"><span data-icon="sparkles"></span> Rebates & Rewards</button>
+      <button data-nav="reports" class="nav-item"><span data-icon="bars"></span> Reports</button>
+    </nav>
+    <div class="sidebar-section-label second-label">PREFERENCES</div>
+    <button data-nav="settings" class="nav-item prefs-nav"><span data-icon="settings"></span> Settings & Privacy</button>
+    <div class="side-bottom">
+      <div class="private-pill"><span class="live-dot"></span> LOCAL DEMO MODE</div>
+      <p>Private sample data. No connected bank accounts or Google Sheets writes.</p>
+      <div class="avatar-row"><div class="avatar">F</div><div><strong>Personal workspace</strong><small>v0.3 · Read-only</small></div><span data-icon="chevron"></span></div>
+    </div>
+  </aside>
+  <div class="content-shell">
+    <header class="topbar">
+      <div class="mobile-brand"><span class="mobile-brand-symbol">↗</span><strong>FINANCE<span>HQ</span></strong></div>
+      <div class="breadcrumb"><span>MY WORKSPACE</span><span class="crumb-separator">/</span><strong id="topbarPage">Overview</strong></div>
+      <div class="topbar-tools"><span class="privacy-chip"><span data-icon="lock"></span> Read-only workspace</span><button class="icon-button" id="searchShortcut" title="Search transactions" aria-label="Search transactions"><span data-icon="search"></span></button><button class="top-add" id="topAdd"><span data-icon="plus"></span><span>New expense</span></button></div>
+    </header>
+    <main id="main" tabindex="-1"><div id="pageRoot" aria-live="polite"></div></main>
+  </div>
+</div>
+<nav class="bottom-nav" aria-label="Mobile navigation">
+  <button data-nav="home" class="active"><span data-icon="home"></span><small>Home</small></button>
+  <button data-nav="activity"><span data-icon="list"></span><small>Activity</small></button>
+  <button data-nav="budget"><span data-icon="chart"></span><small>Budget</small></button>
+  <button class="bottom-add" id="mobileAdd" aria-label="Add expense"><span data-icon="plus"></span></button>
+  <button data-nav="cards"><span data-icon="card"></span><small>Cards</small></button>
+  <button id="mobileMore"><span data-icon="menu"></span><small>More</small></button>
+</nav>
+<div id="modalRoot"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

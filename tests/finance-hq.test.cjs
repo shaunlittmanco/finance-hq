@@ -1,0 +1,25 @@
+const test=require('node:test');const assert=require('node:assert/strict');const S=require('../sheet-sync.js');
+const {fixture}=require('./fixture.cjs');
+test('currency accepts negative and parenthesized values without coercing blanks',()=>{assert.equal(S.money('₱1,200.34'),1200.34);assert.equal(S.money('-₱100.00'),-100);assert.equal(S.money('(₱250.00)'),-250);assert.equal(S.money(''),null);});
+test('cutoff year and exact tab routing',()=>{assert.equal(S.sourceName('2026-10-16'),'Oct 16 - Nov 15');assert.equal(S.sourceName('2026-07-16'),'Jul 15 - Aug 15');assert.equal(S.sourceName('2027-01-16'),'Jan 16 - Feb 15');assert.equal(S.yearForCycle('2027-01-16'),2027);});
+test('does not accept arbitrary workbook identifiers or OAuth values',()=>{assert.equal(S.validateId('bad'), '');assert.equal(S.validateClientId('test'), '');assert.equal(S.validateId('https://docs.google.com/spreadsheets/d/1abcdEFGHij_klMNopq23456/edit'),'1abcdEFGHij_klMNopq23456');});
+test('reads source-authoritative budget, isolates forecast and issuer payments',()=>{const d=S.parseBook(fixture());assert.equal(d.weekly.safe,9000);assert.equal(d.weekly.cap,48000);assert.equal(d.summary.actualPersonal,3500);assert.equal(d.transactions[0].amount,600);assert.equal(d.transactions[0].row,15);assert.equal(d.transactions[1].amount,null);assert.equal(d.transactions[1].estimated,900);assert.equal(d.transactions[2].amount,-100);assert.equal(d.obligations[0].paidIssuer,500);assert.equal(d.obligations[0].remaining,3000);assert.equal(d.people[0].net,100);assert.equal(d.promos.length,1);assert.equal(d.plans.length,1);assert.equal(d.findings[0].status,'MATCH');assert.match(d.links.month,/gid=77/);});
+test('fails closed when monthly header or weekly formula source changes',()=>{const f=fixture();f.tabs['Oct 16 - Nov 15'][13][4]='Swiped??';assert.throws(()=>S.parseBook(f),/Transaction headers changed/);const g=fixture();g.tabs['Weekly Budget'][2][16]='Spending left?';assert.throws(()=>S.parseBook(g),/Weekly Budget header changed/);});
+
+test('2027 workbook uses different weekly column locations and summary label aliases',()=>{
+ const f=fixture();f.title='Expense Tracker — 2027';f.cycle='2027-01-16';f.id='new2027SpreadsheetIdentifierSomeLongValue';
+ f.tabs['Jan 16 - Feb 15']=f.tabs['Oct 16 - Nov 15'];delete f.tabs['Oct 16 - Nov 15'];
+ f.gids['Jan 16 - Feb 15']=90;delete f.gids['Oct 16 - Nov 15'];
+ const m=f.tabs['Jan 16 - Feb 15'];m[4]=['Total Estimated / Swiped','₱30,000'];m[5]=['Gross Paid by Shaun','₱0'];m[6]=['Net Budget Impact','₱0','',''];m[11]=['Total Collectible','₱10,943.96'];m[12]=['Actual Personal Spending','₱0'];
+ f.tabs['Weekly Budget'][2]=['Cutoff Month','Cutoff Period','Strict Cap','Reserved Obligations','Spendable Before Savings','Monthly Savings Target','Effective Spendable After Savings','Actual Discretionary','Cutoff Remaining','Monthly Spending Left (After Savings)','Cutoff Month','Bills Reserve','Installment Reserve','Total Reserved','Actual Remaining Before Savings'];
+ f.tabs['Weekly Budget'][3]=['Feb 2027','Jan 16 - Feb 15','₱48,000','₱35,499.34','₱12,500.66','₱10,000','₱2,500.66','₱0','₱0','₱2,500.66','Feb 2027','₱22,103','₱13,396.34','₱35,499.34','₱12,500.66'];
+ const v=S.parseBook(f);assert.equal(v.weekly.safe,2500.66);assert.equal(v.weekly.billsReserve,22103);assert.equal(v.summary.budgetImpact,0);assert.equal(v.summary.receivable,10943.96);assert.equal(v.summary.actualPersonal,0);assert.equal(v.year,2027);
+});
+test('read request clips ranges to actual 2027 sheet dimensions and uses GET only',async()=>{
+ const f=fixture();f.title='Expense Tracker — 2027';f.cycle='2027-01-16';f.tabs['Jan 16 - Feb 15']=f.tabs['Oct 16 - Nov 15'];delete f.tabs['Oct 16 - Nov 15'];f.gids['Jan 16 - Feb 15']=99;delete f.gids['Oct 16 - Nov 15'];
+ f.tabs['Weekly Budget'][3][1]='Jan 16 - Feb 15';
+ const dims={'Jan 16 - Feb 15':[27,1005],'Weekly Budget':[15,200],'Due Dates':[12,350],'Savings':[10,200],'Shared Expenses - Ako Muna':[46,510],'Credit Card Rebates':[12,250],'Installments':[16,500],'CC Billing Reconciliation':[11,500]};
+ const client=new S.SyncClient();client.token='test-only-memory-token';client.expires=Date.now()+3600000;const seen=[];
+ client.get=async url=>{seen.push(url);if(url.includes('?fields=spreadsheetId,properties'))return {properties:{title:f.title},sheets:Object.entries(dims).map(([title,[columnCount,rowCount]],i)=>({properties:{title,sheetId:i+1,gridProperties:{columnCount,rowCount}}}))};if(!url.includes('values:batchGet'))return {sheets:[]};const p=new URL(url).searchParams,rs=p.getAll('ranges');return {valueRanges:rs.map(v=>{const title=v.split('!')[0].replace(/^'/,'').replace(/'$/,'');return {values:f.tabs[title]||[]};})};};
+ const d=await client.read({2027:'new2027SpreadsheetIdentifierSomeLongValue'},'2027-01-16');const req=new URL(seen[1]).searchParams.getAll('ranges').join(' & ');assert.match(req,/Weekly Budget'!A1:O200/);assert.match(req,/Savings'!A1:J200/);assert.match(req,/Credit Card Rebates'!A1:L250/);assert.match(req,/CC Billing Reconciliation'!A1:K500/);assert.equal(d.tab,'Jan 16 - Feb 15');
+});

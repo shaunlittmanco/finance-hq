@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.openai/
+.env*
+*.token
+*secret*
+*credentials*
+private/
+*source202*.json
+*parsed202*.json
