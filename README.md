@@ -1,10 +1,11 @@
-# Finance HQ v0.3.6
+# Finance HQ v0.3.7
 
 A free, mobile-first, read-only personal finance PWA, continued from the original v0.2 package. Static HTML, CSS and JavaScript; no server, paid service, bank API, or AI scanner.
 
 ## Features
 
 - Overview, transaction search, linked receipt gallery, budgets and savings, credit-card dues/reconciliation, bills/installments, shared balances, rebates and reports.
+- **Transaction split reconciliation:** for comparable positive actual/swiped purchases with a verified My Share value, display the **other portion of the full bill** as actual swipe minus My Share. Show the original Sheet H value separately whenever it is partial, with the additional balance highlighted. Do not imply the derived bill portion is an unpaid/collectible receivable. Flag net settlements/offsets, rebates, planned charges, and unallocated source rows without inventing party allocations.
 - Source-authoritative 16th–15th cutoffs with the July 2026 historical exception. Start-year workbook routing handles December–January. Both tracker layouts are supported.
 - Fixed weekly limits and current remaining spending are separate; actual purchases, estimates, reserves, personal shares, reimbursements and issuer payments stay distinct.
 - Google Identity Services authorization with only `spreadsheets.readonly`; Sheets requests are GET only. Live financial records remain in memory. The short-lived access token is held in tab-scoped `sessionStorage` to resume after reload; it is never written to `localStorage`, snapshots, caches, or GitHub.
@@ -36,7 +37,7 @@ No dependency install is needed. `build` creates an allowlisted `dist/` containi
 
 ## Validation and release status
 
-- 43 automated tests cover parsing, workbook routing, OAuth browser scope, canceled authorization, receipt URLs, source header/formula errors, encryption, tampering, XSS escaping and offline shell cache behavior.
+- 52 automated tests cover parsing, workbook routing, OAuth browser scope, canceled authorization, receipt URLs, source header/formula errors, encryption, tampering, XSS escaping and offline shell cache behavior.
 - Private read-only source validation covered all 18 available cutoffs across the two workbooks, with 2,763 numeric comparisons. Source data and the private validation inputs are deliberately excluded from this repository.
 - Browser checks covered all eight sections plus settings at desktop size, and 390/430 px iPhone-sized layouts, transaction navigation and connection settings.
 - Live Google OAuth authorization and all eight sections were verified against both configured workbooks. Encrypted snapshot save, wrong-passphrase rejection, manual lock, reload and successful unlock were verified in the deployed browser. The temporary QA snapshot was deleted afterward.
@@ -58,3 +59,9 @@ Open **Transactions → Receipt gallery** and select **View receipt**. You can a
 ## Desktop hover preview (v0.3.6)
 
 In Transactions → Receipt gallery, hover any linked receipt card for a quick preview. Hovering the View receipt control in transaction rows or Overview works too. The preview waits 350 ms to avoid accidental loading and automatically closes after pointer exit (260 ms grace), scrolling, locking, or switching account/cutoff. Use **Expand** for the full-size viewer. On touch-only devices like an iPhone, tap **View receipt** instead; hover is intentionally disabled. The existing private Google permissions apply. Safari or privacy extensions may block the embedded preview; use **Original if needed** manually, and never change the receipt's sharing to public. No Drive API scope, paid services, background downloads or receipt caching were introduced.
+
+## Transactions: source vs full bill split (v0.3.7)
+
+Many historical monthly expense rows store only one participant's amount (or nothing) in column H, while the remaining participants are itemized in the Notes or Shared Expenses ledger. For a comparable posted purchase, the new **Other bill portion** field is calculated as **Actual/swiped − My Share**, rounded to cents. It allows the bill amounts displayed in the app to reconcile without altering the spreadsheet's original H value. A **Split check** badge identifies the portion not shown in H, and the original H amount is shown below the derived figure. This is **not** proof that the same amount is owed: some shared portions were already paid, offset, treated, or paid directly by someone else. View the original tracker row for individual shares and repayment status.
+
+Special cases remain separate: a net reimbursement/offset can have an actual transfer smaller than the original personal expense and is marked **Net settlement / offset** rather than fabricated as Others; credits and estimates do not trigger false split warnings. This release changes presentation only. The app remains **read-only** and does not modify any original Google Sheets amounts, formulas, notes, receipt links, payment records, receivables or savings totals. Nine synthetic regression test cases were added; private source values are not committed.
