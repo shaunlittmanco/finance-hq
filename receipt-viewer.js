@@ -120,11 +120,12 @@
   }
   function scheduleHover(anchor) {
     clearTimer('hide');
-    if (hoverCard && !hoverCard.hidden && previewUrl(anchor.dataset.receiptLink || anchor.dataset.receiptHover) === activeHoverUrl) {
+    const nextUrl = previewUrl(anchor.dataset.receiptLink || anchor.dataset.receiptHover);
+    if (hoverCard && !hoverCard.hidden && nextUrl === activeHoverUrl) {
       hoverAnchor = anchor;
-      positionHover(anchor);
-      return;
+      return; // Keep the same preview steady while moving inside a receipt card.
     }
+    if (hoverCard && !hoverCard.hidden && nextUrl !== activeHoverUrl) hideHover();
     clearTimer('show');
     hoverTimer = setTimeout(() => { hoverTimer = null; showHover(anchor); }, HOVER_DELAY);
   }
@@ -212,7 +213,10 @@
     document.addEventListener('pointerout', event => {
       if (!canHover(event) || hoverCard?.contains(event.target)) return;
       const anchor = event.target.closest('[data-receipt-link], [data-receipt-hover]');
-      if (!anchor || (event.relatedTarget && (anchor.contains(event.relatedTarget) || hoverCard?.contains(event.relatedTarget)))) return;
+      if (!anchor) return;
+      const sameCard = anchor.closest('[data-receipt-hover]');
+      if (event.relatedTarget && (anchor.contains(event.relatedTarget) ||
+          sameCard?.contains(event.relatedTarget) || hoverCard?.contains(event.relatedTarget))) return;
       scheduleHide();
     }, true);
     document.addEventListener('scroll', () => {
