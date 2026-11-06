@@ -1,10 +1,11 @@
-# Finance HQ v0.3.7
+# Finance HQ v0.3.8
 
 A free, mobile-first, read-only personal finance PWA, continued from the original v0.2 package. Static HTML, CSS and JavaScript; no server, paid service, bank API, or AI scanner.
 
 ## Features
 
 - Overview, transaction search, linked receipt gallery, budgets and savings, credit-card dues/reconciliation, bills/installments, shared balances, rebates and reports.
+- **Frozen Transactions table columns:** on wide desktop views, Date and Transaction stay pinned at the left while Receipt / Source stays pinned at the right as the center numeric columns scroll. On small phones/tablets, freeze only Transaction (with its date repeated in the description) so numeric fields remain reachable. Transaction table is keyboard-focusable for horizontal scrolling; no changes to other tables.
 - **Transaction split reconciliation:** for comparable positive actual/swiped purchases with a verified My Share value, display the **other portion of the full bill** as actual swipe minus My Share. Show the original Sheet H value separately whenever it is partial, with the additional balance highlighted. Do not imply the derived bill portion is an unpaid/collectible receivable. Flag net settlements/offsets, rebates, planned charges, and unallocated source rows without inventing party allocations.
 - Source-authoritative 16th–15th cutoffs with the July 2026 historical exception. Start-year workbook routing handles December–January. Both tracker layouts are supported.
 - Fixed weekly limits and current remaining spending are separate; actual purchases, estimates, reserves, personal shares, reimbursements and issuer payments stay distinct.
@@ -65,3 +66,7 @@ In Transactions → Receipt gallery, hover any linked receipt card for a quick p
 Many historical monthly expense rows store only one participant's amount (or nothing) in column H, while the remaining participants are itemized in the Notes or Shared Expenses ledger. For a comparable posted purchase, the new **Other bill portion** field is calculated as **Actual/swiped − My Share**, rounded to cents. It allows the bill amounts displayed in the app to reconcile without altering the spreadsheet's original H value. A **Split check** badge identifies the portion not shown in H, and the original H amount is shown below the derived figure. This is **not** proof that the same amount is owed: some shared portions were already paid, offset, treated, or paid directly by someone else. View the original tracker row for individual shares and repayment status.
 
 Special cases remain separate: a net reimbursement/offset can have an actual transfer smaller than the original personal expense and is marked **Net settlement / offset** rather than fabricated as Others; credits and estimates do not trigger false split warnings. This release changes presentation only. The app remains **read-only** and does not modify any original Google Sheets amounts, formulas, notes, receipt links, payment records, receivables or savings totals. Nine synthetic regression test cases were added; private source values are not committed.
+
+## Frozen transaction table (v0.3.8)
+
+On desktop, open Transactions and scroll the table sideways. **Date** and **Transaction** remain on the left, and **Receipt / Source** remains on the right, while **Actual / Swipe**, **My Share**, **Other bill portion** and **Split check** move. At narrower desktop/tablet widths (up to 1100px), the right edge scrolls normally so numeric columns do not get squeezed. On phone and compact tablet widths (up to 800px), only the Transaction identity remains pinned; Date is included inside the Transaction details so it is never lost. This responsive compromise prevents both frozen edges from obscuring the amounts. Scroll focus can be accessed via keyboard. No tracker values, calculations, OAuth scope, or receipts changed.

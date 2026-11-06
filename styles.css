@@ -95,3 +95,41 @@ body.fhq-receipt-open{overflow:hidden}
 .split-origin{display:block;margin-top:4px;font-size:10px;line-height:1.45;color:#9ab3c0;max-width:220px;overflow-wrap:anywhere}
 .data-table td:has(.split-origin){min-width:125px;vertical-align:top}
 .data-table td:has(.split-status){min-width:145px;vertical-align:top}
+
+/* Finance HQ Transactions: freeze both edge columns during horizontal scrolling.
+   Scoped to the live transaction table; billing/rebate tables retain their existing layout. */
+.transaction-table-scroll{max-width:100%;overflow-x:auto;overflow-y:hidden;isolation:isolate;overscroll-behavior-x:contain;scrollbar-gutter:stable}
+.transaction-table-scroll:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.transaction-table{width:100%;min-width:1192px;table-layout:fixed;border-collapse:separate;border-spacing:0}
+.transaction-table col.txn-date-col{width:104px}
+.transaction-table col.txn-name-col{width:245px}
+.transaction-table col.txn-swipe-col{width:140px}
+.transaction-table col.txn-mine-col{width:120px}
+.transaction-table col.txn-others-col{width:205px}
+.transaction-table col.txn-check-col{width:196px}
+.transaction-table col.txn-source-col{width:182px}
+.transaction-table th,.transaction-table td{overflow-wrap:anywhere;background:#0b1c2b;border-bottom:1px solid #20374b}
+.transaction-table thead th{background:#0d2435}
+.transaction-table tbody tr:hover td{background:#122b3c}
+.transaction-table tr>:nth-child(1),.transaction-table tr>:nth-child(2),.transaction-table tr>:last-child{position:sticky;z-index:3}
+.transaction-table tr>:nth-child(1){left:0}
+.transaction-table tr>:nth-child(2){left:104px;box-shadow:3px 0 8px -5px #000a}
+.transaction-table tr>:last-child{right:0;box-shadow:-4px 0 8px -5px #000a}
+.transaction-table thead tr>:nth-child(1),.transaction-table thead tr>:nth-child(2),.transaction-table thead tr>:last-child{z-index:5}
+.transaction-table .strong-cell{color:#f1f7fa}
+.transaction-table td:last-child .receipt-preview-link{display:inline-flex;max-width:100%;text-align:left}
+.txn-inline-date{display:none}
+@media(max-width:1100px){
+  /* Medium screens keep the left transaction identity visible, with more room for values. */
+  .transaction-table tr>:last-child{position:static;box-shadow:none}
+}
+@media(max-width:800px){
+  /* Phones/tablets pin transaction identity; two frozen edges would hide the useful amounts. */
+  .transaction-table{min-width:1088px}
+  .transaction-table col.txn-date-col{width:0;visibility:collapse}
+  .transaction-table tr>:first-child{display:none}
+  .transaction-table col.txn-name-col{width:185px}
+  .transaction-table tr>:nth-child(2){left:0}
+  .txn-inline-date{display:inline}
+  .transaction-table th,.transaction-table td{padding:11px 10px}
+}

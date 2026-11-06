@@ -41,11 +41,11 @@ function splitSummary(t){
 }
 function transactionRows(list){
   if(!list.length)return '<div class="empty"><strong>No matches</strong>Try another search.</div>';
-  const head='<div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Transaction</th><th>Actual / swipe</th><th>My share</th><th>Other bill portion</th><th>Split check</th><th>Receipt / Source</th></tr></thead><tbody>';
+  const head='<div class="table-wrap transaction-table-scroll" role="region" tabindex="0" aria-label="Transaction table. Scroll horizontally to view all columns."><table class="data-table transaction-table"><colgroup><col class="txn-date-col"><col class="txn-name-col"><col class="txn-swipe-col"><col class="txn-mine-col"><col class="txn-others-col"><col class="txn-check-col"><col class="txn-source-col"></colgroup><thead><tr><th scope="col">Date</th><th scope="col">Transaction</th><th scope="col">Actual / swipe</th><th scope="col">My share</th><th scope="col">Other bill portion</th><th scope="col">Split check</th><th scope="col">Receipt / Source</th></tr></thead><tbody>';
   const rows=list.map(t=>{
     const split=splitSummary(t);
     return '<tr><td>'+E(t.date||'Unconfirmed')+'</td><td class="strong-cell">'+E(t.name)+
-      '<div class="table-meta">'+E(t.category)+' · '+E(t.method)+(t.amount===null?' · PLANNED / NOT SWIPED':'')+
+      '<div class="table-meta"><span class="txn-inline-date">'+E(t.date||'Unconfirmed')+' · </span>'+E(t.category)+' · '+E(t.method)+(t.amount===null?' · PLANNED / NOT SWIPED':'')+
       '</div></td><td>'+N(t.amount)+'</td><td>'+N(t.myShare)+'</td><td>'+split.otherCell+
       '</td><td>'+split.checkCell+'</td><td>'+txLink(t)+'</td></tr>';
   });
