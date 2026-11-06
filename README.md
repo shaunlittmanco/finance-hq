@@ -1,10 +1,13 @@
-# Finance HQ v0.3.8
+# Finance HQ v0.3.9
 
 A free, mobile-first, read-only personal finance PWA, continued from the original v0.2 package. Static HTML, CSS and JavaScript; no server, paid service, bank API, or AI scanner.
 
 ## Features
 
 - Overview, transaction search, linked receipt gallery, budgets and savings, credit-card dues/reconciliation, bills/installments, shared balances, rebates and reports.
+- **Transaction sorting:** click Date, Transaction, Swipe, My Share, or Other Bill Portion to toggle ascending/descending. A dropdown adds category, payment method, and split issues first. The selected sort persists while searching and switching cutoff and never edits or reorders the master Sheet.
+- **Typography fix:** freeze-column Date is wider and non-breaking, so `Unconfirmed` and ISO dates never split midword. Long transaction names wrap only at natural word boundaries when possible.
+- **Spending limit terminology:** Fixed Weekly Spend Limit is **after savings**. Base Weekly Allowance is **before savings**, and Safe Spending Left is **after savings, carryover, actual spending, and verified credits**.
 - **Frozen Transactions table columns:** on wide desktop views, Date and Transaction stay pinned at the left while Receipt / Source stays pinned at the right as the center numeric columns scroll. On small phones/tablets, freeze only Transaction (with its date repeated in the description) so numeric fields remain reachable. Transaction table is keyboard-focusable for horizontal scrolling; no changes to other tables.
 - **Transaction split reconciliation:** for comparable positive actual/swiped purchases with a verified My Share value, display the **other portion of the full bill** as actual swipe minus My Share. Show the original Sheet H value separately whenever it is partial, with the additional balance highlighted. Do not imply the derived bill portion is an unpaid/collectible receivable. Flag net settlements/offsets, rebates, planned charges, and unallocated source rows without inventing party allocations.
 - Source-authoritative 16th–15th cutoffs with the July 2026 historical exception. Start-year workbook routing handles December–January. Both tracker layouts are supported.
@@ -70,3 +73,9 @@ Special cases remain separate: a net reimbursement/offset can have an actual tra
 ## Frozen transaction table (v0.3.8)
 
 On desktop, open Transactions and scroll the table sideways. **Date** and **Transaction** remain on the left, and **Receipt / Source** remains on the right, while **Actual / Swipe**, **My Share**, **Other bill portion** and **Split check** move. At narrower desktop/tablet widths (up to 1100px), the right edge scrolls normally so numeric columns do not get squeezed. On phone and compact tablet widths (up to 800px), only the Transaction identity remains pinned; Date is included inside the Transaction details so it is never lost. This responsive compromise prevents both frozen edges from obscuring the amounts. Scroll focus can be accessed via keyboard. No tracker values, calculations, OAuth scope, or receipts changed.
+
+## Sorting, text wrap, and spending limits (v0.3.9)
+
+Live Transactions now defaults to **Date: newest first**. Use the sort menu for date, merchant, swipe, My Share, other bill portion, category, payment method, or issues-first; click sortable column headings to toggle their direction. Unconfirmed dates and blank planned swipes stay at the end of applicable sorts. Search and sort can be used together. The Date column grows from 104px to 154px and uses no-wrap, while the frozen transaction-name cell uses natural word wrapping to prevent broken words. On phones, Date remains repeated inside the transaction description.
+
+The read-only Weekly Budget view now explicitly labels **Fixed Weekly Spend Limit (after savings)** and **Spending Left (after savings)**. These figures mirror the authoritative Sheets formulas. In the tracker, the Base Weekly Allowance is before savings, while weekly fixed limit subtracts the allocated savings target. Safe Spending Left incorporates spending, carryover and actual posted credits. The app does not calculate new budgets or alter any Sheet cells.
