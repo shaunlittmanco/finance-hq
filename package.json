@@ -1,6 +1,6 @@
 {
   "name": "finance-hq",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "private": true,
   "description": "Read-only personal finance dashboard for private Google Sheets workbooks",
   "scripts": {
