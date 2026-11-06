@@ -2,6 +2,9 @@
 (function(root,factory){const api=factory(root);if(typeof module==='object'&&module.exports)module.exports=api;else root.FinanceHQSheets=api;})(typeof globalThis!=='undefined'?globalThis:this,(root)=>{
 'use strict';
 const SCOPE='https://www.googleapis.com/auth/spreadsheets.readonly';
+const SESSION_KEY='finance-hq-google-tab-session-v1',IDLE_MS=300000,MAX_TOKEN_MS=3600000;
+// Tab-scoped, short-lived authorization only. Never store financial values here.
+const sessionBinding=config=>JSON.stringify([validateClientId(config?.clientId),validateId(config?.[2026]),validateId(config?.[2027])]);
 const clean=v=>String(v??'').trim();
 const money=v=>{let s=clean(v).replace(/[₱,$\s]/g,'');if(!s||s==='—'||s==='–')return null;let neg=false;if(/^\(.*\)$/.test(s)){neg=true;s=s.slice(1,-1);}const n=Number(s);return Number.isFinite(n)?(neg?-n:n):null;};
 const n=v=>money(v)??0;
@@ -43,11 +46,31 @@ function safeReceiptUrl(value){try{const u=new URL(value);return u.protocol==='h
 function validateId(v){const str=clean(v);const m=str.match(/\/spreadsheets\/d\/([\w-]+)/);const id=m?m[1]:str;return /^[a-zA-Z0-9_-]{20,}$/.test(id)?id:'';}
 function validateClientId(v){const str=clean(v);return /^[0-9]+-[a-zA-Z0-9_-]+\.apps\.googleusercontent\.com$/.test(str)?str:'';}
 class SyncClient{
- constructor(){this.token='';this.expires=0;this.active=null;this.generation=0;}
- authorize(clientId){const generation=++this.generation;return new Promise((resolve,reject)=>{if(!root.google?.accounts?.oauth2)return reject(Error('Google sign-in library unavailable. Check internet or browser settings.'));try{const client=root.google.accounts.oauth2.initTokenClient({client_id:clientId,scope:SCOPE,include_granted_scopes:false,callback:r=>{if(generation!==this.generation)return reject(Error('Connection cancelled.'));if(r.error)return reject(Error('Google authorization was denied or cancelled.'));if(!root.google.accounts.oauth2.hasGrantedAllScopes(r,SCOPE))return reject(Error('Read-only Sheets permission was not granted.'));if(!r.access_token)return reject(Error('No Google access token returned.'));this.token=r.access_token;this.expires=Date.now()+(Number(r.expires_in)||3300)*1000;resolve();},error_callback:()=>reject(Error('Google popup was closed or blocked.'))});client.requestAccessToken({prompt:''});}catch(err){reject(err);}});}
- lock(){this.generation++;this.token='';this.expires=0;}
- disconnect(){this.generation++;if(this.token&&root.google?.accounts?.oauth2?.revoke)root.google.accounts.oauth2.revoke(this.token,()=>{});this.token='';this.expires=0;}
- async get(url){if(!/^https:\/\/sheets\.googleapis\.com\/v4\/spreadsheets\//.test(url))throw Error('Blocked unexpected API endpoint.');if(!this.token||Date.now()>this.expires-30000)throw Error('Google authorization expired. Connect Google again.');const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),20000);try{const r=await fetch(url,{headers:{Authorization:'Bearer '+this.token},cache:'no-store',credentials:'omit',referrerPolicy:'no-referrer',signal:abort.signal});if(r.status===401){this.token='';throw Error('Authorization expired. Connect again.');}if(r.status===403)throw Error('Access denied. Check Sheets API, Google account and spreadsheet sharing permissions.');if(r.status===404)throw Error('Spreadsheet not found or inaccessible to this Google account.');if(!r.ok)throw Error(`Google Sheets returned HTTP ${r.status}.`);return await r.json();}finally{clearTimeout(timer);}}
+ constructor(){this.token='';this.expires=0;this.issuedAt=0;this.lastActive=0;this.binding='';this.sessionSaved=false;this.active=null;this.generation=0;}
+ restoreSession(config){
+  try{
+   const raw=root.sessionStorage?.getItem(SESSION_KEY);if(!raw)return false;
+   const record=JSON.parse(raw),now=Date.now();
+   if(record.version!==1||record.scope!==SCOPE||record.binding!==sessionBinding(config)||!validateClientId(config?.clientId)||
+      typeof record.token!=='string'||!record.token||record.token.length>8192||/\s/.test(record.token)||
+      ![record.issuedAt,record.expires,record.lastActive].every(Number.isFinite)||
+      record.issuedAt>now||record.issuedAt<=0||record.expires-record.issuedAt>MAX_TOKEN_MS||
+      record.expires<=now+30000||record.lastActive<record.issuedAt||record.lastActive>now||now-record.lastActive>=IDLE_MS)throw Error('Invalid or ended tab session.');
+   this.token=record.token;this.expires=record.expires;this.issuedAt=record.issuedAt;this.lastActive=record.lastActive;this.binding=record.binding;this.sessionSaved=true;return true;
+  }catch{this.lock();return false;}
+ }
+ saveSession(){
+  try{if(!root.sessionStorage)throw Error('Tab storage unavailable.');root.sessionStorage.setItem(SESSION_KEY,JSON.stringify({version:1,scope:SCOPE,binding:this.binding,token:this.token,issuedAt:this.issuedAt,expires:this.expires,lastActive:this.lastActive}));this.sessionSaved=true;}catch{this.sessionSaved=false;}
+ }
+ touchSession(now=Date.now()){
+  if(!this.token)return;
+  if(now>=this.expires-30000||now-this.lastActive>=IDLE_MS){this.lock();return;}
+  this.lastActive=now;this.saveSession();
+ }
+ authorize(clientId,config={clientId}){const generation=++this.generation;return new Promise((resolve,reject)=>{if(!root.google?.accounts?.oauth2)return reject(Error('Google sign-in library unavailable. Check internet or browser settings.'));try{const client=root.google.accounts.oauth2.initTokenClient({client_id:clientId,scope:SCOPE,include_granted_scopes:false,callback:r=>{if(generation!==this.generation)return reject(Error('Connection cancelled.'));if(r.error)return reject(Error('Google authorization was denied or cancelled.'));if(!root.google.accounts.oauth2.hasGrantedAllScopes(r,SCOPE))return reject(Error('Read-only Sheets permission was not granted.'));if(!r.access_token)return reject(Error('No Google access token returned.'));const lifetime=Math.min(Number(r.expires_in)||3300,MAX_TOKEN_MS/1000);if(lifetime<=30)return reject(Error('Google authorization has already expired. Connect again.'));this.token=r.access_token;this.issuedAt=Date.now();this.expires=this.issuedAt+lifetime*1000;this.lastActive=this.issuedAt;this.binding=sessionBinding({...config,clientId});this.saveSession();resolve();},error_callback:()=>reject(Error('Google popup was closed or blocked.'))});client.requestAccessToken({prompt:''});}catch(err){reject(err);}});}
+ lock(){this.generation++;this.token='';this.expires=0;this.issuedAt=0;this.lastActive=0;this.binding='';this.sessionSaved=false;try{root.sessionStorage?.removeItem(SESSION_KEY);}catch{}}
+ disconnect(){const token=this.token;this.lock();if(token&&root.google?.accounts?.oauth2?.revoke)root.google.accounts.oauth2.revoke(token,()=>{});}
+ async get(url){if(!/^https:\/\/sheets\.googleapis\.com\/v4\/spreadsheets\//.test(url))throw Error('Blocked unexpected API endpoint.');if(!this.token||Date.now()>=this.expires-30000){this.lock();throw Error('Google authorization expired. Connect Google again.');}const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),20000);try{const r=await fetch(url,{headers:{Authorization:'Bearer '+this.token},cache:'no-store',credentials:'omit',referrerPolicy:'no-referrer',signal:abort.signal});if(r.status===401){this.lock();throw Error('Authorization expired. Connect again.');}if(r.status===403)throw Error('Access denied. Check Sheets API, Google account and spreadsheet sharing permissions.');if(r.status===404)throw Error('Spreadsheet not found or inaccessible to this Google account.');if(!r.ok)throw Error(`Google Sheets returned HTTP ${r.status}.`);return await r.json();}finally{clearTimeout(timer);}}
  async read(config,cycle){const generation=this.generation;const y=yearForCycle(cycle),id=validateId(config[y]);if(!id)throw Error(`Set the ${y} spreadsheet link in Settings.`);const enc=encodeURIComponent;const base='https://sheets.googleapis.com/v4/spreadsheets/'+enc(id);const meta=await this.get(base+'?fields=spreadsheetId,properties(title),sheets(properties(sheetId,title,gridProperties(rowCount,columnCount)))');const title=meta.properties?.title;if(title!==`Expense Tracker — ${y}`)throw Error(`Expected Expense Tracker — ${y}, but Google returned ${title||'an unnamed workbook'}.`);const props=Object.fromEntries((meta.sheets||[]).map(x=>[x.properties?.title,x.properties]));const month=sourceName(cycle);
  const bounds={
   [month]:[13,10000],

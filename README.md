@@ -1,4 +1,4 @@
-# Finance HQ v0.3.3
+# Finance HQ v0.3.4
 
 A free, mobile-first, read-only personal finance PWA, continued from the original v0.2 package. Static HTML, CSS and JavaScript; no server, paid service, bank API, or AI scanner.
 
@@ -7,7 +7,7 @@ A free, mobile-first, read-only personal finance PWA, continued from the origina
 - Overview, transaction search, linked receipt gallery, budgets and savings, credit-card dues/reconciliation, bills/installments, shared balances, rebates and reports.
 - Source-authoritative 16th–15th cutoffs with the July 2026 historical exception. Start-year workbook routing handles December–January. Both tracker layouts are supported.
 - Fixed weekly limits and current remaining spending are separate; actual purchases, estimates, reserves, personal shares, reimbursements and issuer payments stay distinct.
-- Google Identity Services authorization with only `spreadsheets.readonly`; Sheets requests are GET only. Live data and tokens remain in tab memory.
+- Google Identity Services authorization with only `spreadsheets.readonly`; Sheets requests are GET only. Live financial records remain in memory. The short-lived access token is held in tab-scoped `sessionStorage` to resume after reload; it is never written to `localStorage`, snapshots, caches, or GitHub.
 - Five-minute visible-tab refresh, manual refresh, manual lock and five-minute idle lock.
 - Optional encrypted offline snapshot for one cutoff per browser. AES-256-GCM with a random salt/IV and PBKDF2-SHA256 (310,000 iterations). Passphrase and encryption keys are never saved. A snapshot is explicitly labeled with its refresh time. Disconnect deletes the saved snapshot.
 - Offline app shell, app-scoped service worker/manifest, iPhone Add to Home Screen and responsive navigation.
@@ -20,7 +20,7 @@ A free, mobile-first, read-only personal finance PWA, continued from the origina
 2. Create an OAuth **Web application** client and authorize the JavaScript origin `https://shaunlittmanco.github.io` (no path). Local testing requires its exact localhost origin separately.
 3. Open Finance HQ → Settings. Enter the public OAuth client ID and the two original tracker links. These connection settings are stored only in your browser. Never enter or commit a client secret.
 4. Click **Connect Google & refresh** and approve read-only access. Google controls account authorization; the read-only Sheets scope can read spreadsheets accessible to the selected account, while the app requests only the selected trackers.
-5. On iPhone, open the HTTPS app in Safari → Share → Add to Home Screen. Authorize again after a reload/token expiry. Offline data requires a previously saved encrypted snapshot and its passphrase.
+5. On iPhone, open the HTTPS app in Safari → Share → Add to Home Screen. Reload in the same tab resumes a valid session and fetches fresh figures without another Google popup. Reconnect after Google token expiry, manual lock/disconnect or five minutes without activity. Offline data requires a previously saved encrypted snapshot and its passphrase.
 
 A ChatGPT Google Drive connection does not authorize this separate browser app. Google Cloud account verification and the app's OAuth consent must be completed by the account owner.
 
@@ -36,7 +36,7 @@ No dependency install is needed. `build` creates an allowlisted `dist/` containi
 
 ## Validation and release status
 
-- 27 automated tests cover parsing, workbook routing, OAuth browser scope, canceled authorization, receipt URLs, source header/formula errors, encryption, tampering, XSS escaping and offline shell cache behavior.
+- 37 automated tests cover parsing, workbook routing, OAuth browser scope, canceled authorization, receipt URLs, source header/formula errors, encryption, tampering, XSS escaping and offline shell cache behavior.
 - Private read-only source validation covered all 18 available cutoffs across the two workbooks, with 2,763 numeric comparisons. Source data and the private validation inputs are deliberately excluded from this repository.
 - Browser checks covered all eight sections plus settings at desktop size, and 390/430 px iPhone-sized layouts, transaction navigation and connection settings.
 - Live Google OAuth authorization and all eight sections were verified against both configured workbooks. Encrypted snapshot save, wrong-passphrase rejection, manual lock, reload and successful unlock were verified in the deployed browser. The temporary QA snapshot was deleted afterward.
@@ -47,4 +47,6 @@ See [SECURITY.md](SECURITY.md) for the deployment boundary and remaining risks.
 
 - v0.3.3 versions app script/style URLs to prevent mixed cached assets during updates.
 
-- v0.3.3 distinguishes saved-but-disconnected sessions from first-time setup. Reload/lock shows a direct Connect Google button, the top action reconnects, and pending sync shows loading. Google decides whether previously granted access needs another consent screen; tokens still remain in memory only.
+- v0.3.3 distinguished saved-but-disconnected sessions from first-time setup. Reload/lock shows a direct Connect Google button, the top action reconnects, and pending sync shows loading. Google decides whether previously granted access needs another consent screen; that release still held tokens in memory only.
+
+- v0.3.4 resumes valid Google authorization across same-tab reloads and automatically performs fresh read-only sync. Tests cover unchanged expiry, retained idle deadline, malformed sessions, tracker/client binding, blocked storage, 401 invalidation and lock/disconnect cleanup. Google access is capped at one hour or its shorter issued lifetime; no refresh token or automatic reauthorization is added. Browser session restoration can preserve tab storage, but expiry and idle validation still apply.
