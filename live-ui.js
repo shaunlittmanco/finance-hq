@@ -4,7 +4,7 @@ const Api=window.FinanceHQSheets,CONFIG_KEY='finance-hq-connector-settings-v2',M
 let mode='live',config={clientId:'',2026:'',2027:'',cycle:'2026-10-16'},data=null,error='',busy=false,keyword='',snapshot=false,epoch=0;
 try{mode=localStorage.getItem(MODE_KEY)==='demo'?'demo':'live';}catch{}
 try{const saved=JSON.parse(localStorage.getItem(CONFIG_KEY)||'{}');config={...config,...saved};}catch{}
-const client=new Api.SyncClient(),E=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const client=new Api.SyncClient(),E=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const F=x=>x===null||x===undefined?'Not available':'₱'+Number(x).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2});
 const N=x=>x===null||x===undefined?'—':F(x),S=x=>String(x??'').trim(),cutoffOpts=()=>{let html='';for(let y=2026;y<=2027;y++)for(let m=1;m<=12;m++){if(y===2026&&m<7)continue;const key=`${y}-${String(m).padStart(2,'0')}-16`;html+=`<option value="${key}"${key===config.cycle?' selected':''}>${E(Api.cycleName(key))} · ${m===12?y+'–'+(y+1):y}${key=== '2026-07-16'?' (Jul 15 start)':''}</option>`;}return html;};
 const A=(url,label)=>`<a href="${E(url)}" target="_blank" rel="noopener noreferrer">${E(label)} ↗</a>`;

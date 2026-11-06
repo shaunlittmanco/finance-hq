@@ -1,4 +1,4 @@
-# Finance HQ v0.3
+# Finance HQ v0.3.1
 
 A free, mobile-first, read-only personal finance PWA, continued from the original v0.2 package. Static HTML, CSS and JavaScript; no server, paid service, bank API, or AI scanner.
 
@@ -39,6 +39,8 @@ No dependency install is needed. `build` creates an allowlisted `dist/` containi
 - 22 automated tests cover parsing, workbook routing, OAuth browser scope, canceled authorization, receipt URLs, source header/formula errors, encryption, tampering, XSS escaping and offline shell cache behavior.
 - Private read-only source validation covered all 18 available cutoffs across the two workbooks, with 2,763 numeric comparisons. Source data and the private validation inputs are deliberately excluded from this repository.
 - Browser checks covered all eight sections plus settings at desktop size, and 390/430 px iPhone-sized layouts, transaction navigation and connection settings.
-- Real Google OAuth end-to-end authorization, real-device Safari/Add to Home Screen and a physical device offline roundtrip remain pending account/device access. Browser layout checks do not substitute for native Safari testing.
+- Live Google OAuth authorization and all eight sections were verified against both configured workbooks. Encrypted snapshot save, wrong-passphrase rejection, manual lock, reload and successful unlock were verified in the deployed browser. The temporary QA snapshot was deleted afterward.
+- Real-device Safari/Add to Home Screen and a physical device airplane-mode roundtrip remain pending. Browser layout checks do not substitute for native Safari testing.
+- v0.3.1 fixes apostrophe rendering in live merchant names; no financial calculation changed.
 
 See [SECURITY.md](SECURITY.md) for the deployment boundary and remaining risks.

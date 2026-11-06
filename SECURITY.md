@@ -4,7 +4,7 @@
 
 GitHub Pages serves the application code and synthetic demo only. No private tracker values, receipt files, spreadsheet identifiers, credentials or tokens are bundled. Google authorization happens at Google; financial data is fetched directly from the Google Sheets API into the browser. The app cannot write to trackers or send bank payments. No analytics or application backend receives financial records.
 
-The reviewed static shell is suitable for GitHub Pages within this boundary. Live-account acceptance is pending the owner's OAuth setup and consent. This is a code review and targeted testing, not an independent penetration test or a promise of zero risk.
+The reviewed static shell is suitable for GitHub Pages within this boundary. Owner OAuth setup and consent have been completed; live reads were verified for both configured workbooks. This is a code review and targeted testing, not an independent penetration test or a promise of zero risk.
 
 ## Controls
 
