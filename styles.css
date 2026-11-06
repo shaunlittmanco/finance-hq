@@ -45,3 +45,30 @@ button:disabled{opacity:.45;cursor:not-allowed}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
 summary{cursor:pointer;font-weight:700;color:var(--accent);min-height:44px;line-height:1.6}details[open]>summary{margin-bottom:18px}
+
+/* Private receipt lightbox: keeps receipt viewing within Finance HQ. */
+.receipt-preview-link{display:inline;color:var(--accent);font:inherit;font-weight:650;font-size:inherit;text-align:left;text-decoration:underline;text-underline-offset:2px;background:none;border:0;padding:0;min-height:26px}
+.receipt-preview-link:hover{color:#a4ffe2}
+.live-receipt .receipt-preview-link{font-size:11px;margin-top:7px;align-self:flex-start}
+body.fhq-receipt-open{overflow:hidden}
+.fhq-receipt-dialog{position:fixed;inset:0;margin:auto;padding:0;overflow:hidden;width:min(1040px,calc(100vw - 28px));height:min(850px,calc(100dvh - 28px));max-width:none;max-height:none;color:#eaf8f5;background:#091827;border:1px solid #285465;border-radius:18px;box-shadow:0 24px 80px #000b;z-index:1200}
+.fhq-receipt-dialog::backdrop{background:rgba(2,9,18,.84)}
+.fhq-receipt-shell{display:flex;flex-direction:column;min-height:0;height:100%}
+.fhq-receipt-head{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 19px;border-bottom:1px solid #264051}
+.fhq-receipt-kicker{font-size:10px;letter-spacing:.12em;color:#55e0b5;font-weight:750}
+.fhq-receipt-head h2{font-size:18px;line-height:1.25;margin:5px 0 0;overflow-wrap:anywhere}
+.fhq-receipt-close{flex:0 0 auto;min-width:83px;min-height:42px;padding:9px 13px;border:1px solid #386073;border-radius:11px;background:#123144;color:#e7fcf7;font-weight:750}
+.fhq-receipt-body{display:flex;flex-direction:column;flex:1;min-height:0;padding:10px 13px 0}
+.fhq-receipt-frame{display:block;flex:1;width:100%;min-height:0;border:0;border-radius:8px;background:#f2f4f7}
+.fhq-receipt-hint{margin:8px 2px 9px;color:#a3bcc8;font-size:11px;line-height:1.5}
+.fhq-receipt-unavailable{margin:auto;padding:28px;max-width:540px;text-align:center;color:#c6dbe5;line-height:1.7}
+.fhq-receipt-foot{display:flex;align-items:center;justify-content:space-between;gap:13px;padding:12px 18px;border-top:1px solid #264051;font-size:11px;color:#95b4c1}
+.fhq-receipt-foot a{flex:0 0 auto;font-weight:750}
+@media(max-width:670px){
+ .fhq-receipt-dialog{width:100vw;height:100dvh;border:0;border-radius:0}
+ .fhq-receipt-head{padding:12px}
+ .fhq-receipt-head h2{font-size:16px}
+ .fhq-receipt-body{padding:6px 6px 0}
+ .fhq-receipt-foot{padding:10px 12px;align-items:flex-start;flex-direction:column;gap:5px}
+ .fhq-receipt-hint{font-size:10px}
+}
