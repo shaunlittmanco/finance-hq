@@ -15,6 +15,29 @@ const yearForCycle=key=>Number(key.slice(0,4));
 const sheetUrl=(id,gid,row)=>`https://docs.google.com/spreadsheets/d/${encodeURIComponent(id)}/edit#gid=${Number(gid)||0}${row?`&range=A${Number(row)}`:''}`;
 function findRow(rows,first){return rows.findIndex(r=>clean(r?.[0]).toLowerCase()===first.toLowerCase());}
 function summaryByLabels(rows,columns){const out={};for(const [key,cols,labels] of columns){let value=null;outer:for(const label of (Array.isArray(labels)?labels:[labels]))for(const row of rows.slice(0,14))for(const col of (Array.isArray(cols)?cols:[cols]))if(clean(row?.[col]).toLowerCase()===label.toLowerCase()){value=money(row[col+1]);break outer;}out[key]=value;}return out;}
+
+/* Presentation-only bill allocation check. It does NOT change ledger values,
+   receivables, reimbursements, credits, or source Sheets formulas. */
+function auditTransactionSplit(transaction){
+ const amount=transaction?.amount, mine=transaction?.myShare, recorded=transaction?.others;
+ const round=x=>Math.round((x+Number.EPSILON)*100)/100;
+ const paidByOther=/^paid by\b/i.test(clean(transaction?.method));
+ const base={status:'unavailable',otherPortion:recorded??null,recordedOthers:recorded??null,
+  additional:null,paidByOther};
+ if(amount===null||amount===undefined)return {...base,status:'planned'};
+ if(!Number.isFinite(amount))return base;
+ if(amount<0)return {...base,status:'credit'};
+ if(mine===null||mine===undefined||!Number.isFinite(mine)||mine<0)
+  return {...base,status:'needs-review'};
+ const remaining=round(amount-mine);
+ // Example: original personal purchase was ₱799, but only ₱664 cash was
+ // transferred after a ₱135 credit offset. This is NOT another person's share.
+ if(remaining < -0.02)return {...base,status:'settlement'};
+ const otherPortion=Math.max(0,remaining);
+ const additional=round(otherPortion-(recorded??0));
+ return {...base,otherPortion,additional,
+  status:additional>0.02?'incomplete':additional< -0.02?'overallocated':'matched'};
+}
 function parseBook({id,title,gids,tabs,cycle,now=new Date().toISOString(),receiptLinks={}}){
  for(const rows of Object.values(tabs))for(const row of rows)for(const value of row)if(/^#(?:REF!|DIV\/0!|VALUE!|N\/A|NAME\?|NUM!|ERROR!)$/.test(clean(value)))throw Error('Source Sheet contains a formula error. Nothing imported.');
  if(!/^Expense Tracker [—-] 20\d\d$/.test(title))throw Error('Unexpected spreadsheet title. Nothing imported.');
@@ -28,7 +51,7 @@ function parseBook({id,title,gids,tabs,cycle,now=new Date().toISOString(),receip
  const get=name=>i(name)>=0?money(b[i(name)]):null;
  const wh=weekly.findIndex(r=>clean(r[1])==='Week');const weeks=wh<0?[]:weekly.slice(wh+1).map((r,ix)=>{const h=weekly[wh].map(clean),v=name=>money(r[h.indexOf(name)]);return {row:wh+ix+2,month:clean(r[0]),period:clean(r[1]),fixed:v('Fixed Weekly Spend Limit'),safe:v('Safe Spending Left'),paid:v('Actual Paid by Shaun'),credits:v('Actual Credits'),savings:v('Savings Target')};}).filter(r=>r.month===clean(b[0])&&r.period);
  const basics=summaryByLabels(monthly,[['actualPersonal',[0,2],'Actual Personal Spending'],['grossPaid',[0,2],'Gross Paid by Shaun'],['budgetImpact',[0,2],'Net Budget Impact'],['receivable',[0,4],['Projected collectible','Total Collectible','Total Receivables']],['rebatesReceived',[0,2],'Rebates Received'],['remainingActual',[0,2],'Remaining Actual Budget']]);
- const transactions=monthly.slice(14).map((r,index)=>({row:index+15,date:isoDate(r[0]),name:clean(r[1]),category:clean(r[2]),estimated:money(r[3]),amount:money(r[4]),method:clean(r[5]),myShare:money(r[6]),others:money(r[7]),repaid:money(r[8]),party:clean(r[9]),balance:money(r[10]),receipt:clean(r[12]),receiptUrls:(receiptLinks[index+15]||[]).map(safeReceiptUrl).filter(Boolean),notes:clean(r[11]).slice(0,600)})).filter(t=>t.name&&(t.date||t.estimated!==null||t.amount!==null));
+ const transactions=monthly.slice(14).map((r,index)=>{const t={row:index+15,date:isoDate(r[0]),name:clean(r[1]),category:clean(r[2]),estimated:money(r[3]),amount:money(r[4]),method:clean(r[5]),myShare:money(r[6]),others:money(r[7]),repaid:money(r[8]),party:clean(r[9]),balance:money(r[10]),receipt:clean(r[12]),receiptUrls:(receiptLinks[index+15]||[]).map(safeReceiptUrl).filter(Boolean),notes:clean(r[11]).slice(0,600)};return {...t,split:auditTransactionSplit(t)};}).filter(t=>t.name&&(t.date||t.estimated!==null||t.amount!==null));
  const dues=tabs['Due Dates']||[];
  if(clean(dues[7]?.[0])!=='Due Date'||clean(dues[7]?.[6])!=='Remaining')throw Error('Due Dates headers changed. Nothing imported.');
  const obligations=dues.slice(8).map((r,i)=>({row:i+9,date:clean(r[0]),type:clean(r[1]),name:clean(r[2]),statement:clean(r[3]),amount:money(r[4]),paidIssuer:money(r[5]),remaining:money(r[6]),status:clean(r[7]),posting:clean(r[9]),proof:clean(r[10])})).filter(o=>o.name&&o.date&&o.remaining!==null);
@@ -88,5 +111,5 @@ class SyncClient{
  for(const key of [month,'Weekly Budget','Due Dates'])if(!props[key])throw Error(`Required tab missing: ${key}.`);
  const found=Object.entries(ranges).filter(([k])=>props[k]);const params=new URLSearchParams({valueRenderOption:'FORMATTED_VALUE',fields:'spreadsheetId,valueRanges(range,values)'});for(const [k,r] of found)params.append('ranges',`'${k.replace(/'/g,"''")}'!${r}`);const json=await this.get(base+'/values:batchGet?'+params);if(json.valueRanges?.length!==found.length)throw Error('Incomplete Google Sheets response. Nothing imported.');const tabs=Object.fromEntries(found.map(([k],i)=>[k,json.valueRanges[i]?.values||[]]));const cells=await this.get(base+'?'+new URLSearchParams({ranges:`'${month}'!M15:M${props[month].gridProperties.rowCount}`,fields:'sheets(data(startRow,rowData(values(hyperlink,textFormatRuns(format(link)),userEnteredValue))))'}));const receiptLinks={};for(const sh of cells.sheets||[])for(const grid of sh.data||[])for(const [ix,row] of (grid.rowData||[]).entries()){const c=row.values?.[0]||{};const links=[c.hyperlink,...(c.textFormatRuns||[]).map(r=>r.format?.link?.uri)];const formula=c.userEnteredValue?.formulaValue||'';const fm=formula.match(/^=HYPERLINK\("([^"]+)"/i);if(fm)links.push(fm[1]);receiptLinks[(grid.startRow??14)+ix+1]=[...new Set(links.filter(Boolean))];}if(generation!==this.generation)throw Error('Connection changed. Result discarded.');return parseBook({receiptLinks,id,title,cycle,tabs,gids:Object.fromEntries(Object.entries(props).map(([k,v])=>[k,v.sheetId])),now:new Date().toISOString()});}
 }
-return {SCOPE,parseBook,validateId,validateClientId,isoDate,cycleName,sourceName,yearForCycle,SyncClient,money,sheetUrl,safeReceiptUrl};
+return {SCOPE,parseBook,auditTransactionSplit,validateId,validateClientId,isoDate,cycleName,sourceName,yearForCycle,SyncClient,money,sheetUrl,safeReceiptUrl};
 });
