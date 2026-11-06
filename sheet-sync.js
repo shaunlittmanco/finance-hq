@@ -18,6 +18,45 @@ function summaryByLabels(rows,columns){const out={};for(const [key,cols,labels] 
 
 /* Presentation-only bill allocation check. It does NOT change ledger values,
    receivables, reimbursements, credits, or source Sheets formulas. */
+/* Display sorting only: does not reorder or modify the source Google Sheet. */
+const TRANSACTION_SORTS=Object.freeze([
+ 'date-desc','date-asc','name-asc','name-desc','amount-desc','amount-asc',
+ 'mine-desc','mine-asc','others-desc','others-asc','category-asc','method-asc',
+ 'split-issues'
+]);
+function sortTransactions(transactions,key='date-desc'){
+ const selected=TRANSACTION_SORTS.includes(key)?key:'date-desc';
+ const [field,direction]=selected.split('-');
+ const collator=new Intl.Collator('en',{sensitivity:'base',numeric:true});
+ const ranked={incomplete:0,overallocated:1,'needs-review':2,settlement:3,matched:4,credit:5,planned:6,unavailable:7};
+ const numerical=(t,f)=>{
+   let v=f==='amount'?t.amount:f==='mine'?t.myShare:t.split?.otherPortion??auditTransactionSplit(t).otherPortion;
+   return typeof v==='number'&&Number.isFinite(v)?v:null;
+ };
+ const value=(t,f)=>{
+   if(f==='date')return /^\d{4}-\d{2}-\d{2}$/.test(clean(t.date))?clean(t.date):null;
+   if(['amount','mine','others'].includes(f))return numerical(t,f);
+   if(f==='split')return ranked[t.split?.status??auditTransactionSplit(t).status]??99;
+   return clean(t[f==='name'?'name':f==='category'?'category':'method'])||null;
+ };
+ return (Array.isArray(transactions)?transactions:[]).map((t,index)=>({t,index})).sort((a,b)=>{
+   const va=value(a.t,field),vb=value(b.t,field);
+   if(va===null&&vb!==null)return 1;
+   if(vb===null&&va!==null)return -1;
+   let comparison=0;
+   if(va!==null&&vb!==null){
+      if(typeof va==='number'&&typeof vb==='number')comparison=va-vb;
+      else comparison=collator.compare(String(va),String(vb));
+      if(direction==='desc')comparison=-comparison;
+   }
+   if(comparison)return comparison;
+   if(field==='date'&&va!==null){
+      const ra=Number(a.t.row)||0,rb=Number(b.t.row)||0;
+      return direction==='desc'?rb-ra:ra-rb;
+   }
+   return a.index-b.index;
+ }).map(x=>x.t);
+}
 function auditTransactionSplit(transaction){
  const amount=transaction?.amount, mine=transaction?.myShare, recorded=transaction?.others;
  const round=x=>Math.round((x+Number.EPSILON)*100)/100;
@@ -111,5 +150,5 @@ class SyncClient{
  for(const key of [month,'Weekly Budget','Due Dates'])if(!props[key])throw Error(`Required tab missing: ${key}.`);
  const found=Object.entries(ranges).filter(([k])=>props[k]);const params=new URLSearchParams({valueRenderOption:'FORMATTED_VALUE',fields:'spreadsheetId,valueRanges(range,values)'});for(const [k,r] of found)params.append('ranges',`'${k.replace(/'/g,"''")}'!${r}`);const json=await this.get(base+'/values:batchGet?'+params);if(json.valueRanges?.length!==found.length)throw Error('Incomplete Google Sheets response. Nothing imported.');const tabs=Object.fromEntries(found.map(([k],i)=>[k,json.valueRanges[i]?.values||[]]));const cells=await this.get(base+'?'+new URLSearchParams({ranges:`'${month}'!M15:M${props[month].gridProperties.rowCount}`,fields:'sheets(data(startRow,rowData(values(hyperlink,textFormatRuns(format(link)),userEnteredValue))))'}));const receiptLinks={};for(const sh of cells.sheets||[])for(const grid of sh.data||[])for(const [ix,row] of (grid.rowData||[]).entries()){const c=row.values?.[0]||{};const links=[c.hyperlink,...(c.textFormatRuns||[]).map(r=>r.format?.link?.uri)];const formula=c.userEnteredValue?.formulaValue||'';const fm=formula.match(/^=HYPERLINK\("([^"]+)"/i);if(fm)links.push(fm[1]);receiptLinks[(grid.startRow??14)+ix+1]=[...new Set(links.filter(Boolean))];}if(generation!==this.generation)throw Error('Connection changed. Result discarded.');return parseBook({receiptLinks,id,title,cycle,tabs,gids:Object.fromEntries(Object.entries(props).map(([k,v])=>[k,v.sheetId])),now:new Date().toISOString()});}
 }
-return {SCOPE,parseBook,auditTransactionSplit,validateId,validateClientId,isoDate,cycleName,sourceName,yearForCycle,SyncClient,money,sheetUrl,safeReceiptUrl};
+return {SCOPE,parseBook,auditTransactionSplit,sortTransactions,TRANSACTION_SORTS,validateId,validateClientId,isoDate,cycleName,sourceName,yearForCycle,SyncClient,money,sheetUrl,safeReceiptUrl};
 });
