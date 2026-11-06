@@ -8,3 +8,6 @@ dist/
 private/
 *source202*.json
 *parsed202*.json
+.wrangler/
+.build/
+.dev.vars*

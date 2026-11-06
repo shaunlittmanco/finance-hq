@@ -32,3 +32,17 @@ The reviewed static shell is suitable for GitHub Pages within this boundary. Own
 - https://developers.google.com/identity/oauth2/web/guides/use-token-model
 - https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits
 - https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto
+
+## v0.4.0 renewable connection — pending activation
+
+The separate server and passkey client are prepared but not enabled. The empty `gateway.js` endpoint preserves the current v0.3.4 connector until deployment and owner authorization. The controls above describe that legacy connector; this section describes the proposed activated path.
+
+On activation, encrypted Google refresh/access credentials live only in the new private server's D1 database, with its AES-256-GCM key held separately in encrypted runtime secrets. Google authorization requests include the existing Sheets read-only scope plus OpenID/email for verifying the sole owner's identity. Both source books are checked before retaining access. Google signature/nonce/state/PKCE and a browser-verifier-bound callback ticket are validated. Read APIs accept only supported cutoff IDs and use server-owned spreadsheet IDs; there is no arbitrary URL proxy or Sheets write route.
+
+The browser instead receives a random, short-lived Finance HQ app session. D1 stores only its hash. Sessions can renew during active use but have a twelve-hour absolute maximum. Five-minute idle locking clears/revokes the app session without revoking the Google grant. Passkey authentication requires a verified device user, matching RP ID/origin, a valid signature, counter checks and one-use expiring challenges. Passkeys can be enrolled only after a recent verified Google setup. No biometric data or private passkey key is transmitted to or stored by this app.
+
+The frontend remains on GitHub Pages. The exact new backend origin must be pinned in CSP before activation. API calls omit cookies, avoiding reliance on third-party cookie availability. App tokens remain accessible to same-origin JavaScript in the active tab; other Pages projects under the same origin must still be trusted. This does not create HTTP-only cookies or isolate project paths.
+
+The free backend temporarily processes finance responses over HTTPS but stores no financial records or receipt files. Request/provider-token/body logging is disabled. All finance responses are private/no-store. Cloudflare Workers Free and D1 Free have quotas; exceeding them must produce an error, not enable a paid plan.
+
+Release requires Cloudflare owner sign-in, encrypted runtime configuration, a separate server OAuth client, Google production publishing/authorization, live token renewal, and real-device passkey testing. The code/build/fixture checks do not establish those results. Google can revoke or expire a renewable grant; never promise that reconnect will be impossible or permanently unnecessary.

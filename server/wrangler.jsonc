@@ -1,0 +1,10 @@
+{
+  "name": "finance-hq-session",
+  "main": "src/worker.mjs",
+  "compatibility_date": "2026-11-06",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "observability": {"enabled": false},
+  "limits": {"cpu_ms": 10},
+  "d1_databases": [{"binding":"DB","database_name":"finance-hq-session","database_id":"REPLACE_WITH_NEW_FINANCE_HQ_DATABASE_ID","migrations_dir":"migrations"}]
+}
