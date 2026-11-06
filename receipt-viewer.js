@@ -204,13 +204,13 @@
   if (typeof document !== 'undefined') {
     // Delegated handlers also work for transaction rows re-rendered after a Sheets refresh.
     document.addEventListener('pointerover', event => {
-      if (!canHover(event)) return;
+      if (!canHover(event) || hoverCard?.contains(event.target)) return;
       const anchor = event.target.closest('[data-receipt-link], [data-receipt-hover]');
       if (!anchor || (event.relatedTarget && anchor.contains(event.relatedTarget))) return;
       scheduleHover(anchor);
     }, true);
     document.addEventListener('pointerout', event => {
-      if (!canHover(event)) return;
+      if (!canHover(event) || hoverCard?.contains(event.target)) return;
       const anchor = event.target.closest('[data-receipt-link], [data-receipt-hover]');
       if (!anchor || (event.relatedTarget && (anchor.contains(event.relatedTarget) || hoverCard?.contains(event.relatedTarget)))) return;
       scheduleHide();
