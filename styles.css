@@ -72,3 +72,16 @@ body.fhq-receipt-open{overflow:hidden}
  .fhq-receipt-foot{padding:10px 12px;align-items:flex-start;flex-direction:column;gap:5px}
  .fhq-receipt-hint{font-size:10px}
 }
+
+/* Intent-based desktop receipt hover preview. No receipt bytes are stored locally. */
+.fhq-receipt-hover{position:fixed;z-index:1150;display:flex;flex-direction:column;overflow:hidden;background:#0b2030;color:#effcf9;border:1px solid #35716b;border-radius:16px;box-shadow:0 24px 65px rgba(0,0,0,.52);pointer-events:auto}
+.fhq-receipt-hover[hidden]{display:none!important}
+.fhq-hover-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;background:#0c2834;border-bottom:1px solid #2e5964;flex:0 0 auto}
+.fhq-hover-title{font-size:12px;line-height:1.4;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fhq-hover-actions{display:flex;gap:6px;flex:0 0 auto}
+.fhq-hover-actions button{color:#e6fffb;background:#153d46;border:1px solid #316774;border-radius:8px;min-height:34px;padding:5px 10px;font-weight:700;font-size:11px}
+.fhq-hover-body{display:flex;flex:1;min-height:0;padding:6px}
+.fhq-hover-body iframe{display:block;flex:1;min-width:0;min-height:0;width:100%;height:100%;border:0;border-radius:7px;background:#edf2f6}
+.fhq-hover-foot{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:9px;padding:8px 12px;border-top:1px solid #2e5964;color:#a6bdc9;font-size:10px}
+.fhq-hover-foot a{color:#65efc6;white-space:nowrap}
+@media(hover:none),(pointer:coarse){.fhq-receipt-hover{display:none!important}}

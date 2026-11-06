@@ -38,3 +38,79 @@ test('CSP permits only the approved embedded Google receipt domain', () => {
   assert.ok(page.indexOf('receipt-viewer.js') < page.indexOf('live-ui.js'));
   assert.match(sw, /receipt-viewer\.js/);
 });
+
+
+test('hover preview waits for pointer intent and clears private iframe after mouse leaves', () => {
+  const vm = require('node:vm');
+  const src = fs.readFileSync(path.join(__dirname, '..', 'receipt-viewer.js'), 'utf8');
+  const listeners = new Map(), pending = new Map();
+  let nextTimer = 0, frameUrl = '', frameCleared = false, created = 0;
+  const frame = {
+    set src(value) { frameUrl = value; frameCleared = false; },
+    removeAttribute(name) { if (name === 'src') { frameUrl = ''; frameCleared = true; } }
+  };
+  const labels = {
+    '.fhq-hover-title': { textContent: '' },
+    '[data-receipt-original]': { href: '' },
+    'iframe': frame
+  };
+  const card = {
+    hidden: true, isConnected: true, dataset: {}, style: {},
+    setAttribute() {}, addEventListener() {},
+    querySelector(selector) { return labels[selector]; },
+    contains(element) { return element === card; }
+  };
+  const document = {
+    body: { appendChild() {} },
+    createElement() { created++; return card; },
+    addEventListener(type, cb) { listeners.set(type, cb); }
+  };
+  const win = { matchMedia() { return { matches: true }; }, innerWidth: 1200, innerHeight: 820 };
+  const code = { module: { exports: {} }, document, window: win, navigator: { onLine: true },
+    URL, setTimeout(cb, delay) { const id = ++nextTimer; pending.set(id, { cb, delay }); return id; },
+    clearTimeout(id) { pending.delete(id); }
+  };
+  vm.runInNewContext(src, code);
+  const insideCard = {}, galleryCard = { contains(node) { return node === insideCard; } };
+  const trigger = { dataset: { receiptLink: file, receiptLabel: 'Sample receipt' }, isConnected: true,
+    closest(selector) { return selector === '[data-receipt-hover]' ? galleryCard : trigger; },
+    contains() { return false; },
+    getBoundingClientRect() { return { left: 350, top: 170, bottom: 190 }; }
+  };
+  listeners.get('pointerover')({ pointerType: 'mouse', target: trigger, relatedTarget: null });
+  assert.equal(created, 0, 'no iframe or popup should load immediately');
+  assert.deepEqual([...pending.values()].map(t => t.delay), [350]);
+  const show = [...pending.values()][0];
+  pending.clear(); show.cb();
+  assert.equal(created, 1);
+  assert.equal(card.hidden, false);
+  assert.equal(frameUrl, viewer.previewUrl(file));
+  listeners.get('pointerover')({ pointerType: 'mouse', target: card, relatedTarget: null });
+  assert.equal(pending.size, 0, 'hover panel must not trigger itself');
+  listeners.get('pointerout')({ pointerType: 'mouse', target: trigger, relatedTarget: insideCard });
+  assert.equal(pending.size, 0, 'moving within the same gallery card must keep the preview');
+  listeners.get('pointerout')({ pointerType: 'mouse', target: trigger, relatedTarget: null });
+  assert.equal(frameCleared, false, 'frame should survive brief pointer travel');
+  const hide = [...pending.values()][0];
+  assert.equal(hide.delay, 260);
+  pending.clear(); hide.cb();
+  assert.equal(card.hidden, true);
+  assert.equal(frameCleared, true, 'iframe URL must be removed after hover');
+});
+test('touch and coarse-pointer devices never open receipt hover iframe', () => {
+  const vm = require('node:vm');
+  const src = fs.readFileSync(path.join(__dirname, '..', 'receipt-viewer.js'), 'utf8');
+  const listeners = new Map();
+  let calls = 0;
+  const ctx = {
+    module: { exports: {} }, URL, navigator: { onLine: true },
+    document: { addEventListener(type, cb) { listeners.set(type, cb); } },
+    window: { matchMedia() { return { matches: false }; } },
+    setTimeout() { calls++; return 1; }, clearTimeout() {}
+  };
+  vm.runInNewContext(src, ctx);
+  const element = { closest() { return element; }, contains() { return false; } };
+  listeners.get('pointerover')({ pointerType: 'touch', target: element, relatedTarget: null });
+  listeners.get('pointerover')({ pointerType: 'mouse', target: element, relatedTarget: null });
+  assert.equal(calls, 0);
+});
