@@ -1,4 +1,4 @@
-# Finance HQ v0.3.4
+# Finance HQ v0.3.5
 
 A free, mobile-first, read-only personal finance PWA, continued from the original v0.2 package. Static HTML, CSS and JavaScript; no server, paid service, bank API, or AI scanner.
 
@@ -11,7 +11,7 @@ A free, mobile-first, read-only personal finance PWA, continued from the origina
 - Five-minute visible-tab refresh, manual refresh, manual lock and five-minute idle lock.
 - Optional encrypted offline snapshot for one cutoff per browser. AES-256-GCM with a random salt/IV and PBKDF2-SHA256 (310,000 iterations). Passphrase and encryption keys are never saved. A snapshot is explicitly labeled with its refresh time. Disconnect deletes the saved snapshot.
 - Offline app shell, app-scoped service worker/manifest, iPhone Add to Home Screen and responsive navigation.
-- Receipts are private Google file links attached to their original transactions; no Drive permission or public image copies. Image previews open in Google Drive rather than embedded thumbnails.
+- **Receipt Gallery in-app previews:** clicking a linked receipt opens a Google Drive file preview **inside Finance HQ** in a responsive, dismissible dialog. Finance HQ does not make receipts public, copy them, request the Drive API scope or store their contents. If the private embed is blocked (notably in some Safari/iPhone configurations), the dialog has an optional **Open original only if needed** fallback. Non-file Google links display an in-app notice instead.
 - Explicitly separate synthetic demo. Keep receipt analysis and expense logging in ChatGPT; this app never writes to Sheets.
 
 ## Account setup (required before live use)
@@ -36,7 +36,7 @@ No dependency install is needed. `build` creates an allowlisted `dist/` containi
 
 ## Validation and release status
 
-- 37 automated tests cover parsing, workbook routing, OAuth browser scope, canceled authorization, receipt URLs, source header/formula errors, encryption, tampering, XSS escaping and offline shell cache behavior.
+- 41 automated tests cover parsing, workbook routing, OAuth browser scope, canceled authorization, receipt URLs, source header/formula errors, encryption, tampering, XSS escaping and offline shell cache behavior.
 - Private read-only source validation covered all 18 available cutoffs across the two workbooks, with 2,763 numeric comparisons. Source data and the private validation inputs are deliberately excluded from this repository.
 - Browser checks covered all eight sections plus settings at desktop size, and 390/430 px iPhone-sized layouts, transaction navigation and connection settings.
 - Live Google OAuth authorization and all eight sections were verified against both configured workbooks. Encrypted snapshot save, wrong-passphrase rejection, manual lock, reload and successful unlock were verified in the deployed browser. The temporary QA snapshot was deleted afterward.
@@ -50,3 +50,7 @@ See [SECURITY.md](SECURITY.md) for the deployment boundary and remaining risks.
 - v0.3.3 distinguished saved-but-disconnected sessions from first-time setup. Reload/lock shows a direct Connect Google button, the top action reconnects, and pending sync shows loading. Google decides whether previously granted access needs another consent screen; that release still held tokens in memory only.
 
 - v0.3.4 resumes valid Google authorization across same-tab reloads and automatically performs fresh read-only sync. Tests cover unchanged expiry, retained idle deadline, malformed sessions, tracker/client binding, blocked storage, 401 invalidation and lock/disconnect cleanup. Google access is capped at one hour or its shorter issued lifetime; no refresh token or automatic reauthorization is added. Browser session restoration can preserve tab storage, but expiry and idle validation still apply.
+
+## In-app receipt viewer (v0.3.5)
+
+Open **Transactions → Receipt gallery** and select **View receipt**. You can also preview receipts from transaction rows or the Overview. The viewer stays inside the Finance HQ screen with a close button; it embeds the existing restricted Google Drive file using `/file/d/ID/preview` with no additional Google API scope. Google still controls who is allowed to view the file. No private receipt bytes or URLs are bundled into the public source. On some browsers (especially Safari with cross-site tracking restrictions), embedded private previews can fail. In that case, you can optionally open the original Google link using the viewer's fallback. Do **not** change file sharing to "Anyone with the link" just to make embedding work.
