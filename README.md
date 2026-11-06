@@ -1,4 +1,4 @@
-# Finance HQ v0.3.2
+# Finance HQ v0.3.3
 
 A free, mobile-first, read-only personal finance PWA, continued from the original v0.2 package. Static HTML, CSS and JavaScript; no server, paid service, bank API, or AI scanner.
 
@@ -36,7 +36,7 @@ No dependency install is needed. `build` creates an allowlisted `dist/` containi
 
 ## Validation and release status
 
-- 22 automated tests cover parsing, workbook routing, OAuth browser scope, canceled authorization, receipt URLs, source header/formula errors, encryption, tampering, XSS escaping and offline shell cache behavior.
+- 27 automated tests cover parsing, workbook routing, OAuth browser scope, canceled authorization, receipt URLs, source header/formula errors, encryption, tampering, XSS escaping and offline shell cache behavior.
 - Private read-only source validation covered all 18 available cutoffs across the two workbooks, with 2,763 numeric comparisons. Source data and the private validation inputs are deliberately excluded from this repository.
 - Browser checks covered all eight sections plus settings at desktop size, and 390/430 px iPhone-sized layouts, transaction navigation and connection settings.
 - Live Google OAuth authorization and all eight sections were verified against both configured workbooks. Encrypted snapshot save, wrong-passphrase rejection, manual lock, reload and successful unlock were verified in the deployed browser. The temporary QA snapshot was deleted afterward.
@@ -45,4 +45,6 @@ No dependency install is needed. `build` creates an allowlisted `dist/` containi
 
 See [SECURITY.md](SECURITY.md) for the deployment boundary and remaining risks.
 
-- v0.3.2 versions app script/style URLs to prevent mixed cached assets during updates.
+- v0.3.3 versions app script/style URLs to prevent mixed cached assets during updates.
+
+- v0.3.3 distinguishes saved-but-disconnected sessions from first-time setup. Reload/lock shows a direct Connect Google button, the top action reconnects, and pending sync shows loading. Google decides whether previously granted access needs another consent screen; tokens still remain in memory only.

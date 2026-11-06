@@ -43,3 +43,5 @@ main{max-width:1570px;margin:0 auto;padding:33px clamp(20px,3.5vw,54px) 80px}.ey
 button:disabled{opacity:.45;cursor:not-allowed}
 .live-notice{overflow-wrap:anywhere}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+summary{cursor:pointer;font-weight:700;color:var(--accent);min-height:44px;line-height:1.6}details[open]>summary{margin-bottom:18px}
