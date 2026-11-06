@@ -2,7 +2,7 @@
 (function(root,factory){const api=factory(root);if(typeof module==='object'&&module.exports)module.exports=api;else root.FinanceHQGateway=api;})(typeof globalThis!=='undefined'?globalThis:this,root=>{
 'use strict';
 // Filled only after the separate free server is deployed and verified. Empty keeps the existing connector active.
-const ENDPOINT='';
+const ENDPOINT='https://finance-hq-session.shaunlittmanco.workers.dev';
 const KEY='finance-hq-passkey-tab-v1',SETUP_KEY='finance-hq-google-setup-v1',IDLE=300000;
 const enc=new TextEncoder();
 const b64=bytes=>{let s='';for(const b of new Uint8Array(bytes))s+=String.fromCharCode(b);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');};

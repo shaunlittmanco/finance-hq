@@ -12,7 +12,7 @@ Continued from the original v0.2 app; the existing desktop/mobile dashboard and 
 
 ## Release status
 
-The server endpoint in `gateway.js` is intentionally empty. That leaves the existing browser connector active until the new server is configured and verified. See [server/README.md](server/README.md) for the complete deployment and owner-authorization steps.
+The server endpoint and CSP are pinned to the new Finance HQ Worker in this branch. The public Pages app is still v0.3.4; do not merge or publish this branch until Google setup and hosted renewal are verified. The new Worker and its isolated D1 schema have been deployed, with private configuration in encrypted runtime secrets. Google server-client credentials, consent and actual passkey testing remain pending. See [server/README.md](server/README.md) for the complete deployment and owner-authorization steps.
 
 No paid service, real financial data, private spreadsheet identifier, OAuth secret or token is included in this repository. Cloudflare Workers and D1 must remain on their Free plans. The Google OAuth project must leave Testing before issuing the renewable grant, because Testing refresh tokens expire after seven days.
 

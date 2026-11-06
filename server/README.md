@@ -6,7 +6,7 @@ The browser uses a passkey to unlock Finance HQ. Google authorization is retaine
 
 ## Deployment prerequisites
 
-- Owner signs into a Cloudflare account on the **Free** plan. Confirm this before deploying. Exceeding free quotas must fail, not trigger a plan upgrade.
+- Owner signs into a Cloudflare account on the **Free** plan. For CLI deployment the relevant scope is `workers_scripts:write`, alongside `account:read` and `d1:write`; `workers:write` alone does not authorize script deployment. Confirm this before deploying. Exceeding free quotas must fail, not trigger a plan upgrade.
 - Create one new D1 database named `finance-hq-session` and fill its returned identifier in `wrangler.jsonc`. Do not reuse another app's database.
 - Deploy this Worker to obtain its actual HTTPS `workers.dev` URL. No secrets are bundled, and requests fail closed until configured.
 - In the existing Finance HQ Google Cloud project, create a **separate server OAuth Web client**. Its redirect URI must exactly equal `https://<the-new-worker>/oauth/callback`. Keep the existing browser client intact until the new flow is verified.

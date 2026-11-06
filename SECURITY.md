@@ -35,7 +35,7 @@ The reviewed static shell is suitable for GitHub Pages within this boundary. Own
 
 ## v0.4.0 renewable connection — pending activation
 
-The separate server and passkey client are prepared but not enabled. The empty `gateway.js` endpoint preserves the current v0.3.4 connector until deployment and owner authorization. The controls above describe that legacy connector; this section describes the proposed activated path.
+The separate server is deployed with an isolated D1 database, disabled application logs, Node compatibility and encrypted runtime configuration. The passkey client is prepared and its exact server address is pinned in this branch. The current public v0.3.4 app remains unchanged until Google server-client setup, owner authorization and hosted verification are complete. The controls above describe that legacy connector; this section describes the proposed activated path.
 
 On activation, encrypted Google refresh/access credentials live only in the new private server's D1 database, with its AES-256-GCM key held separately in encrypted runtime secrets. Google authorization requests include the existing Sheets read-only scope plus OpenID/email for verifying the sole owner's identity. Both source books are checked before retaining access. Google signature/nonce/state/PKCE and a browser-verifier-bound callback ticket are validated. Read APIs accept only supported cutoff IDs and use server-owned spreadsheet IDs; there is no arbitrary URL proxy or Sheets write route.
 
