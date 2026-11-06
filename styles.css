@@ -133,3 +133,36 @@ body.fhq-receipt-open{overflow:hidden}
   .txn-inline-date{display:inline}
   .transaction-table th,.transaction-table td{padding:11px 10px}
 }
+
+/* v0.3.9: readable fixed columns and accessible transaction sorting. */
+.transaction-table{min-width:1242px}
+.transaction-table col.txn-date-col{width:154px}
+.transaction-table tr>:nth-child(2){left:154px}
+.transaction-table th:first-child,.transaction-table td:first-child{
+ white-space:nowrap;overflow-wrap:normal;word-break:normal;letter-spacing:normal
+}
+.transaction-table td.strong-cell{overflow-wrap:break-word;word-break:normal;hyphens:manual;line-height:1.5}
+.transaction-table td,.transaction-table th{word-spacing:normal;letter-spacing:normal}
+.transaction-table .txn-inline-date{white-space:nowrap}
+.transaction-table th .txn-header-sort{
+ display:inline-flex;align-items:center;gap:7px;max-width:100%;
+ background:transparent;border:0;padding:6px 0;
+ font:inherit;font-weight:inherit;color:inherit;
+ letter-spacing:normal;text-align:left;text-transform:inherit;white-space:nowrap
+}
+.transaction-table th .txn-header-sort:hover,.transaction-table th .txn-header-sort:focus-visible{color:#7cf0cc}
+.transaction-table th .txn-header-sort span{color:#55e0b5;font-size:12px}
+.live-controls{flex-wrap:wrap}
+.txn-sort-control{display:flex;align-items:center;gap:8px;white-space:nowrap;font-weight:700;font-size:11px;color:#97b2be}
+.txn-sort-control select{min-width:180px;max-width:240px;height:41px;padding:7px 30px 7px 12px;background:#0b2232;border:1px solid #355266;color:#f0f8f7;border-radius:9px}
+@media(max-width:800px){
+ .transaction-table{min-width:1088px}
+ .transaction-table tr>:nth-child(2){left:0}
+ .transaction-table col.txn-date-col{width:0;visibility:collapse}
+ .transaction-table th:first-child,.transaction-table td:first-child{display:none}
+ .transaction-table .txn-inline-date{display:inline}
+}
+@media(max-width:670px){
+ .live-controls .txn-sort-control{flex:1;min-width:0}
+ .live-controls .txn-sort-control select{flex:1;min-width:0;max-width:none}
+}
