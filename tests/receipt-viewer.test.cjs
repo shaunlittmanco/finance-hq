@@ -71,8 +71,10 @@ test('hover preview waits for pointer intent and clears private iframe after mou
     clearTimeout(id) { pending.delete(id); }
   };
   vm.runInNewContext(src, code);
+  const insideCard = {}, galleryCard = { contains(node) { return node === insideCard; } };
   const trigger = { dataset: { receiptLink: file, receiptLabel: 'Sample receipt' }, isConnected: true,
-    closest() { return trigger; }, contains() { return false; },
+    closest(selector) { return selector === '[data-receipt-hover]' ? galleryCard : trigger; },
+    contains() { return false; },
     getBoundingClientRect() { return { left: 350, top: 170, bottom: 190 }; }
   };
   listeners.get('pointerover')({ pointerType: 'mouse', target: trigger, relatedTarget: null });
@@ -83,6 +85,10 @@ test('hover preview waits for pointer intent and clears private iframe after mou
   assert.equal(created, 1);
   assert.equal(card.hidden, false);
   assert.equal(frameUrl, viewer.previewUrl(file));
+  listeners.get('pointerover')({ pointerType: 'mouse', target: card, relatedTarget: null });
+  assert.equal(pending.size, 0, 'hover panel must not trigger itself');
+  listeners.get('pointerout')({ pointerType: 'mouse', target: trigger, relatedTarget: insideCard });
+  assert.equal(pending.size, 0, 'moving within the same gallery card must keep the preview');
   listeners.get('pointerout')({ pointerType: 'mouse', target: trigger, relatedTarget: null });
   assert.equal(frameCleared, false, 'frame should survive brief pointer travel');
   const hide = [...pending.values()][0];
