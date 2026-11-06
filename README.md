@@ -1,4 +1,4 @@
-# Finance HQ v0.3.1
+# Finance HQ v0.3.2
 
 A free, mobile-first, read-only personal finance PWA, continued from the original v0.2 package. Static HTML, CSS and JavaScript; no server, paid service, bank API, or AI scanner.
 
@@ -44,3 +44,5 @@ No dependency install is needed. `build` creates an allowlisted `dist/` containi
 - v0.3.1 fixes apostrophe rendering in live merchant names; no financial calculation changed.
 
 See [SECURITY.md](SECURITY.md) for the deployment boundary and remaining risks.
+
+- v0.3.2 versions app script/style URLs to prevent mixed cached assets during updates.
